@@ -1,4 +1,5 @@
 import type {
+  IDataObject,
   IExecuteFunctions,
   INodeExecutionData,
   INodeType,
@@ -33,7 +34,6 @@ export class Glimpse implements INodeType {
       },
     ],
     properties: [
-      // Resource
       {
         displayName: 'Resource',
         name: 'resource',
@@ -45,8 +45,6 @@ export class Glimpse implements INodeType {
         ],
         default: 'signal',
       },
-
-      // --- Competitor operations ---
       {
         displayName: 'Operation',
         name: 'operation',
@@ -77,8 +75,6 @@ export class Glimpse implements INodeType {
         description: 'Max number of competitors to return (max 500)',
         typeOptions: { minValue: 1, maxValue: 500 },
       },
-
-      // --- Signal operations ---
       {
         displayName: 'Operation',
         name: 'operation',
@@ -140,7 +136,7 @@ export class Glimpse implements INodeType {
     const resource = this.getNodeParameter('resource', 0) as string
     const operation = this.getNodeParameter('operation', 0) as string
 
-    let responseData: Record<string, unknown>
+    let responseData: IDataObject
 
     if (resource === 'competitor') {
       if (operation === 'get') {
@@ -148,23 +144,22 @@ export class Glimpse implements INodeType {
         responseData = await this.helpers.httpRequestWithAuthentication.call(
           this, 'glimpseApi', {
             method: 'GET',
-            url: `${baseUrl}/api/v1/competitors/${id}`,
+            url: baseUrl + '/api/v1/competitors/' + id,
             json: true,
           },
-        )
+        ) as IDataObject
       } else {
         const limit = this.getNodeParameter('competitorLimit', 0) as number
         responseData = await this.helpers.httpRequestWithAuthentication.call(
           this, 'glimpseApi', {
             method: 'GET',
-            url: `${baseUrl}/api/v1/competitors`,
+            url: baseUrl + '/api/v1/competitors',
             qs: { limit },
             json: true,
           },
-        )
+        ) as IDataObject
       }
     } else {
-      // signal.getAll
       const filters = this.getNodeParameter('signalFilters', 0, {}) as {
         competitorIds?: string
         types?: string[]
@@ -174,23 +169,22 @@ export class Glimpse implements INodeType {
 
       const qs: Record<string, string> = {}
       if (filters.competitorIds) qs.competitor_ids = filters.competitorIds
-      if (filters.types?.length) qs.types = filters.types.join(',')
+      if (filters.types && filters.types.length) qs.types = filters.types.join(',')
       if (filters.days) qs.days = String(filters.days)
       if (filters.limit) qs.limit = String(filters.limit)
 
       responseData = await this.helpers.httpRequestWithAuthentication.call(
         this, 'glimpseApi', {
           method: 'GET',
-          url: `${baseUrl}/api/v1/signals`,
+          url: baseUrl + '/api/v1/signals',
           qs,
           json: true,
         },
-      )
+      ) as IDataObject
     }
 
-    // Unwrap { data: [...] } envelope
-    const items = Array.isArray((responseData as { data?: unknown }).data)
-      ? (responseData as { data: Record<string, unknown>[] }).data
+    const items = Array.isArray(responseData.data)
+      ? responseData.data as IDataObject[]
       : [responseData]
 
     return [this.helpers.returnJsonArray(items)]
