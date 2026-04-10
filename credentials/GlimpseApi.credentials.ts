@@ -39,6 +39,3 @@ export class GlimpseApi implements ICredentialType {
     },
   }
 }
-```
-
-Commit that, then let me know and I'll give you file 2.
