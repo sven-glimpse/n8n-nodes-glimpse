@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/glimpsehq/n8n-nodes-glimpse"
+    "url": "https://github.com/sven-glimpse/n8n-nodes-glimpse"
   },
   "main": "dist/index.js",
   "scripts": {
