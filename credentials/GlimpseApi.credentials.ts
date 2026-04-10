@@ -1,4 +1,3 @@
-```typescript
 import type {
   IAuthenticateGeneric,
   ICredentialType,
@@ -34,7 +33,7 @@ export class GlimpseApi implements ICredentialType {
     type: 'generic',
     properties: {
       headers: {
-        Authorization: '=Bearer {{$credentials.apiKey}}',
+        Authorization: '=Bearer ' + '{{$credentials.apiKey}}',
       },
     },
   }
