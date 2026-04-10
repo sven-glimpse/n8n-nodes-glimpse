@@ -1,4 +1,5 @@
 import type {
+  IDataObject,
   IPollFunctions,
   INodeExecutionData,
   INodeType,
@@ -64,7 +65,6 @@ export class GlimpseTrigger implements INodeType {
     const staticData = this.getWorkflowStaticData('node')
     const lastPollTime = staticData.lastPollTime as string | undefined
 
-    // Build query params
     const qs: Record<string, string> = {
       days: '1',
       limit: '100',
@@ -75,36 +75,33 @@ export class GlimpseTrigger implements INodeType {
     const responseData = await this.helpers.httpRequestWithAuthentication.call(
       this, 'glimpseApi', {
         method: 'GET',
-        url: `${baseUrl}/api/v1/signals`,
+        url: baseUrl + '/api/v1/signals',
         qs,
         json: true,
       },
-    ) as { data: Array<{ published_at: string | null; created_at: string }> }
+    ) as IDataObject
 
-    const signals = responseData.data ?? []
+    const signals = (responseData.data as IDataObject[]) || []
 
-    // Filter to only new signals since last poll
     const newSignals = lastPollTime
       ? signals.filter((s) => {
-          const signalTime = s.published_at ?? s.created_at
+          const signalTime = (s.published_at as string) || (s.created_at as string)
           return signalTime > lastPollTime
         })
       : signals
 
-    // Update last poll time to the most recent signal
     if (newSignals.length > 0) {
       const mostRecent = newSignals.reduce((latest, s) => {
-        const t = s.published_at ?? s.created_at
+        const t = (s.published_at as string) || (s.created_at as string)
         return t > latest ? t : latest
       }, '')
       staticData.lastPollTime = mostRecent
     } else if (!lastPollTime) {
-      // First run with no signals - set to now to avoid re-fetching
       staticData.lastPollTime = new Date().toISOString()
     }
 
     if (newSignals.length === 0) return null
 
-    return [this.helpers.returnJsonArray(newSignals as unknown as Record<string, unknown>[])]
+    return [this.helpers.returnJsonArray(newSignals)]
   }
 }
