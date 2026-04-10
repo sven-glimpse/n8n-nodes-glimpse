@@ -1,20 +1,3 @@
-# Publishes this n8n community node to npm with provenance.
-#
-# Triggered by pushing a semver tag (e.g. 0.1.0, 1.0.0).
-#
-# Setup (do once):
-#   Option A - OIDC Trusted Publishing (recommended, no secrets needed):
-#     1. Go to npmjs.com > package settings > Publishing access > Trusted publishing
-#     2. Add: repo = glimpsehq/n8n-nodes-glimpse, workflow = publish.yml
-#
-#   Option B - npm Token:
-#     1. Create a granular access token on npmjs.com
-#     2. Add it as a GitHub secret named NPM_TOKEN
-#
-# To publish:
-#   git tag 0.1.0
-#   git push origin 0.1.0
-
 name: Publish
 
 on:
@@ -37,8 +20,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
-          cache: 'npm'
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm install
@@ -47,8 +30,6 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
-        run: |
-          [ -n "$NPM_TOKEN" ] && npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
-          npm publish --provenance --access public
+        run: npm publish --provenance --access public
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
